@@ -1,0 +1,14 @@
+package dev.alejandro.orderservice.dto;
+
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class TransactionRequestDTO{
+    private OrderDTO order;
+    private PaymentDTO payment;
+}

@@ -1,6 +1,9 @@
 package dev.alejandro.orderservice.service.impl;
 
 import dev.alejandro.orderservice.dto.OrderDTO;
+import dev.alejandro.orderservice.dto.PaymentDTO;
+import dev.alejandro.orderservice.dto.TransactionRequestDTO;
+import dev.alejandro.orderservice.dto.TransactionResponseDTO;
 import dev.alejandro.orderservice.entity.Order;
 import dev.alejandro.orderservice.exceptions.EmptyCollectionException;
 import dev.alejandro.orderservice.repository.OrderRepository;
@@ -8,6 +11,7 @@ import dev.alejandro.orderservice.service.OrderService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Objects;
@@ -18,6 +22,7 @@ import java.util.Objects;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
+    private final RestTemplate restTemplate;
     @Override
     public OrderDTO createOrder(OrderDTO orderDTO) throws IllegalArgumentException {
         if (orderDTO == null) {
@@ -77,5 +82,20 @@ public class OrderServiceImpl implements OrderService {
         int response = orderRepository.updateOrderById(id,order);
         if (Objects.equals(response,0)) throw new IllegalArgumentException("Order not found");
         return new OrderDTO(order.getId(),order.getName(),order.getQuantity(),order.getPrice());
+    }
+
+    @Override
+    public TransactionResponseDTO saveOrder(TransactionRequestDTO transactionRequestDTO) throws IllegalArgumentException {
+        OrderDTO orderDTO = transactionRequestDTO.getOrder();
+        PaymentDTO paymentDTO = transactionRequestDTO.getPayment();
+        paymentDTO.setOrderId(orderDTO.id());
+        paymentDTO.setAmount(orderDTO.price());
+
+        // Call payment service
+        PaymentDTO response = restTemplate.postForObject("http://localhost:9091/payment",paymentDTO,PaymentDTO.class);
+        createOrder(orderDTO);
+        if (response == null) throw new IllegalArgumentException("Payment service failed");
+        String message = response.getPaymentStatus().equals("SUCCESS") ? "Payment successful and order placed" : "Payment failed, order not placed";
+        return new TransactionResponseDTO(orderDTO,response.getTransactionId(),response.getAmount(),message);
     }
 }

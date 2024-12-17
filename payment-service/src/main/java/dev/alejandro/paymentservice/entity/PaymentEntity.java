@@ -25,4 +25,9 @@ public class PaymentEntity implements Serializable {
     private String status;
     @Column(name = "transaction_id")
     private String transtactionId;
+
+    @Column(name = "order_id")
+    private int orderId;
+    @Column(name = "amount")
+    private double amount;
 }

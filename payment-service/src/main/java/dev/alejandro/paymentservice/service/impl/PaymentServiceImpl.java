@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
+import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -20,13 +21,27 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public PaymentResponseDTO createPayment(PaymentRequestDTO paymentDTO) throws IllegalArgumentException {
         if(Objects.isNull(paymentDTO)) throw new IllegalArgumentException("Invalid payment request");
-        if(paymentDTO.status().isBlank()) throw new IllegalArgumentException("Invalid payment status");
+        if (paymentDTO.orderId() <= 0) throw new IllegalArgumentException("Invalid order id");
+        if (paymentDTO.amount() <= 0) throw new IllegalArgumentException("Invalid amount");
         PaymentEntity payment = PaymentEntity
                 .builder()
-                .status(paymentDTO.status())
+                .status(paymentProccesing())
                 .transtactionId(UUID.randomUUID().toString())
+                .orderId(paymentDTO.orderId())
+                .amount(paymentDTO.amount())
                 .build();
         PaymentEntity p = paymentRepository.save(payment);
-        return new PaymentResponseDTO(p.getId(), p.getStatus(), p.getTranstactionId());
+        return new PaymentResponseDTO(
+                p.getId(),
+                p.getStatus(),
+                p.getTranstactionId(),
+                p.getOrderId(),
+                p.getAmount()
+        );
+    }
+
+    public String paymentProccesing(){
+        //api should be 3rd party payment gateway
+        return new Random().nextBoolean() ? "SUCCESS" : "FAILURE";
     }
 }

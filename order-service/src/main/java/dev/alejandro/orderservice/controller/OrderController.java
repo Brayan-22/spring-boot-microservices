@@ -1,6 +1,9 @@
 package dev.alejandro.orderservice.controller;
 
 import dev.alejandro.orderservice.dto.OrderDTO;
+import dev.alejandro.orderservice.dto.PaymentDTO;
+import dev.alejandro.orderservice.dto.TransactionRequestDTO;
+import dev.alejandro.orderservice.dto.TransactionResponseDTO;
 import dev.alejandro.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +17,10 @@ public class OrderController {
 
 
     @PostMapping("")
-    public ResponseEntity<?> bookOrder(@RequestBody OrderDTO orderDTO) {
-        return ResponseEntity.ok(orderService.createOrder(orderDTO));
+    public ResponseEntity<TransactionResponseDTO> bookOrder(@RequestBody TransactionRequestDTO transactionRequestDTO) {
+        return ResponseEntity.ok(orderService.saveOrder(transactionRequestDTO));
     }
+
     @GetMapping("")
     public ResponseEntity<?> getOrders() {
         return ResponseEntity.ok(orderService.getOrders());
