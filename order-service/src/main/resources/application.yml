@@ -1,0 +1,29 @@
+spring:
+    application:
+        name: ORDER-SERVICE
+    jpa:
+        database: h2
+        database-platform: org.hibernate.dialect.H2Dialect
+        hibernate:
+            ddl-auto: create-drop
+    h2:
+        console:
+            enabled: true
+    sql:
+        init:
+            mode: embedded
+    datasource:
+        driver-class-name: org.h2.Driver
+        name: order-service
+        url: jdbc:h2:mem:order-service
+server:
+    port: 9092
+eureka:
+    client:
+        register-with-eureka: true
+        fetch-registry: true
+        service-url:
+            defaultZone: http://localhost:8761/eureka/
+        instance-info-replication-interval-seconds: 10
+    instance:
+        hostname: localhost
