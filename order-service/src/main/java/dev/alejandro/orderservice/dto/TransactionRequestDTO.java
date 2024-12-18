@@ -10,5 +10,4 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class TransactionRequestDTO{
     private OrderDTO order;
-    private PaymentDTO payment;
 }

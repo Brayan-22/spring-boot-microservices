@@ -87,12 +87,12 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public TransactionResponseDTO saveOrder(TransactionRequestDTO transactionRequestDTO) throws IllegalArgumentException {
         OrderDTO orderDTO = transactionRequestDTO.getOrder();
-        PaymentDTO paymentDTO = transactionRequestDTO.getPayment();
+        PaymentDTO paymentDTO = new PaymentDTO();
         paymentDTO.setOrderId(orderDTO.id());
         paymentDTO.setAmount(orderDTO.price());
 
         // Call payment service
-        PaymentDTO response = restTemplate.postForObject("http://PAYMENT-SERVICE/payment",paymentDTO,PaymentDTO.class);
+        PaymentDTO response = restTemplate.postForObject("http://localhost:9091/payment",paymentDTO,PaymentDTO.class);
         createOrder(orderDTO);
         if (response == null) throw new IllegalArgumentException("Payment service failed");
         String message = response.getPaymentStatus().equals("SUCCESS") ? "Payment successful and order placed" : "Payment failed, order not placed";
