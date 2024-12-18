@@ -8,6 +8,7 @@ import dev.alejandro.paymentservice.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
@@ -38,6 +39,19 @@ public class PaymentServiceImpl implements PaymentService {
                 p.getOrderId(),
                 p.getAmount()
         );
+    }
+
+    @Override
+    public List<PaymentResponseDTO> getPayments() throws IllegalArgumentException {
+        List<PaymentEntity> payments = paymentRepository.findAll();
+        if(payments.isEmpty()) throw new IllegalArgumentException("No payments found");
+        return payments.stream().map(p -> new PaymentResponseDTO(
+                p.getId(),
+                p.getStatus(),
+                p.getTranstactionId(),
+                p.getOrderId(),
+                p.getAmount()
+        )).toList();
     }
 
     public String paymentProccesing(){

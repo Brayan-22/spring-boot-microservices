@@ -7,7 +7,7 @@ eureka:
     register-with-eureka: false
     fetch-registry: false
   instance:
-    lease-expiration-duration-in-seconds: 90
-    lease-renewal-interval-in-seconds: 10
+    hostname: localhost
+    prefer-ip-address: true
 server:
   port: 8761

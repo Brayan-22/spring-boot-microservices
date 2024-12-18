@@ -92,7 +92,7 @@ public class OrderServiceImpl implements OrderService {
         paymentDTO.setAmount(orderDTO.price());
 
         // Call payment service
-        PaymentDTO response = restTemplate.postForObject("http://localhost:9091/payment",paymentDTO,PaymentDTO.class);
+        PaymentDTO response = restTemplate.postForObject("http://gateway-service:8080/payment",paymentDTO,PaymentDTO.class);
         createOrder(orderDTO);
         if (response == null) throw new IllegalArgumentException("Payment service failed");
         String message = response.getPaymentStatus().equals("SUCCESS") ? "Payment successful and order placed" : "Payment failed, order not placed";
