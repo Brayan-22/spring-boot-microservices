@@ -3,16 +3,25 @@ spring:
     name: GATEWAY-SERVICE
   cloud:
     gateway:
-        routes:
-          - id: order-route
-            uri: lb://ORDER-SERVICE
-            predicates:
-              - Path=/order/**
-          - id: payment-route
-            uri: lb://PAYMENT-SERVICE
-            predicates:
-              - Path=/payment/**
-
+      routes:
+        - id: order-route
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/order/**
+        - id: payment-route
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/payment/**
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter:
+              replenishRate: 5
+              burstCapacity: 10
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
 eureka:
   client:
     register-with-eureka: true
