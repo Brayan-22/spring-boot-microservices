@@ -10,6 +10,7 @@ import dev.alejandro.orderservice.repository.OrderRepository;
 import dev.alejandro.orderservice.service.OrderService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -20,7 +21,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 @Transactional
 public class OrderServiceImpl implements OrderService {
-
+    private final Environment env;
     private final OrderRepository orderRepository;
     private final RestTemplate restTemplate;
     @Override
@@ -92,7 +93,7 @@ public class OrderServiceImpl implements OrderService {
         paymentDTO.setAmount(orderDTO.price());
 
         // Call payment service
-        PaymentDTO response = restTemplate.postForObject("http://gateway-service:8080/payment",paymentDTO,PaymentDTO.class);
+        PaymentDTO response = restTemplate.postForObject("http://"+env.getProperty("app.gateway-host")+":9091/payment",paymentDTO,PaymentDTO.class);
         createOrder(orderDTO);
         if (response == null) throw new IllegalArgumentException("Payment service failed");
         String message = response.getPaymentStatus().equals("SUCCESS") ? "Payment successful and order placed" : "Payment failed, order not placed";

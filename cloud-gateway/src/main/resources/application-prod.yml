@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: GATEWAY-SERVICE
+  cloud:
+    gateway:
+      routes:
+        - id: order-route
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/order/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: order-service
+                fallback-url: forward:/orderFallback
+        - id: payment-route
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/payment/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: payment-service
+                fallback-url: forward:/paymentFallback
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter:
+              replenishRate: 5
+              burstCapacity: 10
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+server:
+  port: ${GATEWAY_PORT}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: hystrix-stream
+
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.data.redis: DEBUG
+    dev.alejandro.cloudgateway: INFO

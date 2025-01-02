@@ -1,13 +1,3 @@
 spring:
-  application:
-    name: service-registry
-
-eureka:
-  client:
-    register-with-eureka: false
-    fetch-registry: false
-  instance:
-    hostname: localhost
-    prefer-ip-address: true
-server:
-  port: 8761
+  profiles:
+    active: @profileActive@

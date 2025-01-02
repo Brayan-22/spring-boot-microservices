@@ -1,7 +1,6 @@
 package dev.alejandro.orderservice.controller;
 
 import dev.alejandro.orderservice.dto.OrderDTO;
-import dev.alejandro.orderservice.dto.PaymentDTO;
 import dev.alejandro.orderservice.dto.TransactionRequestDTO;
 import dev.alejandro.orderservice.dto.TransactionResponseDTO;
 import dev.alejandro.orderservice.service.OrderService;
@@ -34,7 +33,7 @@ public class OrderController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteOrder(@PathVariable Integer id) {
         orderService.deleteOrder(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")

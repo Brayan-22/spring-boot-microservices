@@ -3,7 +3,6 @@ package dev.alejandro.paymentservice.controller;
 import dev.alejandro.paymentservice.dto.PaymentRequestDTO;
 import dev.alejandro.paymentservice.service.PaymentService;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

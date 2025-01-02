@@ -1,4 +1,4 @@
-# Use an official OpenJDK runtime as a parent image
+# Use an official amazon correto jdk runtime as a parent image
 FROM amazoncorretto:21-al2023-headless
 
 # Set the working directory in the container

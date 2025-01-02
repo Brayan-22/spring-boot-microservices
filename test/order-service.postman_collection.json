@@ -1,0 +1,228 @@
+{
+	"info": {
+		"_postman_id": "e503b161-6c35-4681-9f97-06d83bf55ffe",
+		"name": "order-service",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26592608"
+	},
+	"item": [
+		{
+			"name": "GET",
+			"item": [
+				{
+					"name": "getOrders",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/order",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"order"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getOrderById",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/order/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"order",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{randomId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "POST",
+			"item": [
+				{
+					"name": "bookOrder",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const minInt = 1;\r",
+									"const maxInt = 1000;\r",
+									"const randomNumber = Math.floor(Math.random()* (maxInt - minInt + 1)) + minInt;\r",
+									"pm.collectionVariables.set(\"randomQuantity\",randomNumber);\r",
+									"const minFloat = 1.0;\r",
+									"const maxFloat = 2999.99;\r",
+									"const randomPrice = (Math.random() * (maxFloat - minFloat) + minFloat).toFixed(2);\r",
+									"pm.collectionVariables.set(\"randomPrice\",randomPrice);\r",
+									"\r",
+									"const minId = 1;\r",
+									"const maxId = 100000;\r",
+									"const randomId = Math.floor(Math.random() * (maxId - minId) + 1) + minId;\r",
+									"pm.collectionVariables.set(\"randomId\",randomId);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"order\":{\r\n        \"id\":{{randomId}},\r\n        \"name\":\"someProduct\",\r\n        \"quantity\":{{randomQuantity}},\r\n        \"price\": {{randomPrice}}\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/order",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"order"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "DELETE",
+			"item": [
+				{
+					"name": "deleteOrder",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/order/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"order",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{randomId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "PUT",
+			"item": [
+				{
+					"name": "updateOrder",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\":{{randomId}},\r\n    \"name\":\"someOtherProduct\",\r\n    \"quantity\":{{randomQuantity}},\r\n    \"price\":{{randomPrice}}\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/order/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"order",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{randomId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "randomQuantity",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "randomPrice",
+			"value": "10.0",
+			"type": "string"
+		},
+		{
+			"key": "randomId",
+			"value": "1",
+			"type": "string"
+		}
+	]
+}
