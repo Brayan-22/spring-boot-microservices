@@ -10,6 +10,9 @@ import dev.alejandro.orderservice.repository.OrderRepository;
 import dev.alejandro.orderservice.service.OrderService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -20,10 +23,14 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@RefreshScope
 public class OrderServiceImpl implements OrderService {
     private final Environment env;
     private final OrderRepository orderRepository;
+    @Lazy
     private final RestTemplate restTemplate;
+    @Value("${microservice.payment-service.endpoints.endpoint.uri}")
+    private String PAYMENT_ENDPOINT_URL;
     @Override
     public OrderDTO createOrder(OrderDTO orderDTO) throws IllegalArgumentException {
         if (orderDTO == null) {
@@ -93,7 +100,7 @@ public class OrderServiceImpl implements OrderService {
         paymentDTO.setAmount(orderDTO.price());
 
         // Call payment service
-        PaymentDTO response = restTemplate.postForObject("http://"+env.getProperty("app.gateway-host")+":9091/payment",paymentDTO,PaymentDTO.class);
+        PaymentDTO response = restTemplate.postForObject(PAYMENT_ENDPOINT_URL,paymentDTO,PaymentDTO.class);
         createOrder(orderDTO);
         if (response == null) throw new IllegalArgumentException("Payment service failed");
         String message = response.getPaymentStatus().equals("SUCCESS") ? "Payment successful and order placed" : "Payment failed, order not placed";

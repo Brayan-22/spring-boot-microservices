@@ -32,12 +32,8 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: 6379
-eureka:
-  client:
-    register-with-eureka: true
-    fetch-registry: true
-    service-url:
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+  config:
+    import: configserver:http://config-server:9196
 server:
   port: ${GATEWAY_PORT}
 management:

@@ -16,12 +16,7 @@ spring:
     driver-class-name: org.h2.Driver
     name: payment-service
     url: jdbc:h2:mem:payment-service
+  config:
+    import: configserver:http://config-server:9196
 server:
   port: ${PAYMENT_SERVICE_PORT}
-
-eureka:
-  client:
-    register-with-eureka: true
-    fetch-registry: true
-    service-url:
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
