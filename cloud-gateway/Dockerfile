@@ -1,14 +1,18 @@
-# Use an official amazon correto jdk runtime as a parent image
-FROM amazoncorretto:21-al2023-headless
+FROM maven:3-amazoncorretto-21-al2023 AS build
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the executable JAR file from the host machine to the container
-COPY target/*.jar app.jar
+COPY pom.xml ./
+COPY src ./src
 
-# Expose the port that the application will run on
+RUN mvn clean package -DskipTests -Pprod
+
+FROM amazoncorretto:21-al2023-headless
+
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
+
 EXPOSE 8080
 
-# Run the JAR file
 ENTRYPOINT ["java", "-jar", "app.jar"]

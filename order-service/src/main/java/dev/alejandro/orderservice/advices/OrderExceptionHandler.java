@@ -3,6 +3,7 @@ package dev.alejandro.orderservice.advices;
 import dev.alejandro.orderservice.dto.CustomErrorResponseDTO;
 import dev.alejandro.orderservice.dto.GlobalErrorCode;
 import dev.alejandro.orderservice.exceptions.EmptyCollectionException;
+import dev.alejandro.orderservice.exceptions.ParsingObjectException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,5 +34,16 @@ public class OrderExceptionHandler {
         );
         log.error("{}::handleEmptyCollectionException exception caught: {}",this.getClass().getName(),e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(ParsingObjectException.class)
+    public ResponseEntity<?> handleParsingObjectException(ParsingObjectException e){
+        CustomErrorResponseDTO error = new CustomErrorResponseDTO(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                e.getMessage(),
+                GlobalErrorCode.ERROR_PARSING_DATA
+        );
+        log.error("{}::handleParsingObjectException exception caught: {}",this.getClass().getName(),e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }

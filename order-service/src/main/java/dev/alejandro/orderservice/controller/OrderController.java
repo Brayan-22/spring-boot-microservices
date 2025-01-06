@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
+@CrossOrigin(originPatterns = "*", methods= {RequestMethod.GET,RequestMethod.POST,RequestMethod.PUT,RequestMethod.DELETE},
+allowedHeaders = "*", allowCredentials = "true")
 @RequestMapping("/order")
 public class OrderController {
     private final OrderService orderService;

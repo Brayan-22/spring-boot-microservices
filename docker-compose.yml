@@ -1,4 +1,11 @@
 services:
+  zipkin-service:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin-service
+    ports:
+      - "9411:9411"
+    networks:
+        - microservices-network
   redis-service:
     image: redis:latest
     container_name: redis-service
@@ -6,6 +13,56 @@ services:
       - "6379"
     networks:
       - microservices-network
+  reverse-proxy:
+    image: nginx:latest
+    container_name: reverse-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - microservices-network
+    depends_on:
+      gateway-service:
+        condition: service_healthy
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    networks:
+      - microservices-network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.10.0
+    container_name: logstash
+    ports:
+      - "5044:5044"
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+    networks:
+      - microservices-network
+    depends_on:
+      elasticsearch:
+        condition: service_started
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.10.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    networks:
+      - microservices-network
+    depends_on:
+      elasticsearch:
+        condition: service_started
+
   eureka-server:
     image: eureka-server:latest
     container_name: eureka-server
@@ -16,6 +73,11 @@ services:
       - "8761:8761"
     networks:
       - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://eureka-server:8761/actuator/health"]
+      interval: 50s
+      timeout: 10s
+      retries: 5
   config-server:
     image: config-server:latest
     container_name: config-server
@@ -27,7 +89,13 @@ services:
     networks:
         - microservices-network
     depends_on:
-      - eureka-server
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://config-server:9196/actuator/health"]
+      interval: 60s
+      timeout: 20s
+      retries: 10
   order-service:
     image: order-service:latest
     container_name: order-service
@@ -39,12 +107,19 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
       - ORDER_SERVICE_PORT=9092
+      - CONFIG_SERVER_URI=http://config-server:9196
+      - ZIPKIN_SERVER_URI=http://zipkin-service:9411
     networks:
       - microservices-network
     depends_on:
-      - eureka-server
-      - config-server
-
+      zipkin-service:
+        condition: service_started
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      logstash:
+        condition: service_started
   payment-service:
     image: payment-service:latest
     container_name: payment-service
@@ -56,12 +131,19 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
       - PAYMENT_SERVICE_PORT=9091
+      - CONFIG_SERVER_URI=http://config-server:9196
+      - ZIPKIN_SERVER_URI=http://zipkin-service:9411
     networks:
       - microservices-network
     depends_on:
-      - eureka-server
-      - config-server
-
+      zipkin-service:
+        condition: service_started
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      logstash:
+        condition: service_started
   gateway-service:
     image: gateway-service:latest
     container_name: gateway-service
@@ -73,15 +155,33 @@ services:
     environment:
       - REDIS_HOST=redis-service
       - REDIS_PORT=6379
+      - CONFIG_SERVER_URI=http://config-server:9196
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - ZIPKIN_SERVER_URI=http://zipkin-service:9411
+      - GATEWAY_PORT=8080
     networks:
       - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://gateway-service:8080/actuator/health"]
+      interval: 60s
+      timeout: 20s
+      retries: 10
     depends_on:
-      - eureka-server
-      - order-service
-      - payment-service
-      - redis-service
-      - config-server
+      zipkin-service:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      redis-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
+volumes:
+  esdata:
+    driver: local
 networks:
   microservices-network:
     driver: bridge

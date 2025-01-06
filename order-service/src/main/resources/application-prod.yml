@@ -17,6 +17,24 @@ spring:
     name: order-service
     url: jdbc:h2:mem:order-service
   config:
-    import: configserver:http://config-server:9196
+    import: configserver:${CONFIG_SERVER_URI}
+  zipkin:
+    base-url: ${ZIPKIN_SERVER_URI}
 server:
   port: ${ORDER_SERVICE_PORT}
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - "*"
+    endpoint:
+      health:
+        show-details: always
+  tracing:
+    sampling:
+      probability: 1.0
+    enabled: true
+eureka:
+  instance:
+    hostname: order-service

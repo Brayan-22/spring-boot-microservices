@@ -3,6 +3,23 @@ spring:
     name: GATEWAY-SERVICE
   cloud:
     gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origin-patterns:
+              - "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+            maxAge: 3600
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 30s
       routes:
         - id: order-route
           uri: lb://ORDER-SERVICE
@@ -33,18 +50,27 @@ spring:
       host: ${REDIS_HOST}
       port: 6379
   config:
-    import: configserver:http://config-server:9196
+    import: configserver:${CONFIG_SERVER_URI}
+  zipkin:
+    base-url: ${ZIPKIN_SERVER_URI}
 server:
   port: ${GATEWAY_PORT}
 management:
   endpoints:
     web:
       exposure:
-        include: hystrix-stream
-
+        include:
+          - "*"
+    endpoint:
+      health:
+        show-details: always
 logging:
   level:
+    org.springframework.cloud.gateway.filter: TRACE
+    org.springframework.cloud.gateway.handler: TRACE
+    org.springframework.cloud.circuitbreaker: DEBUG
     root: INFO
     org.springframework.cloud.gateway: DEBUG
     org.springframework.data.redis: DEBUG
+    reactor.netty: DEBUG
     dev.alejandro.cloudgateway: INFO

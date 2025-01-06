@@ -6,6 +6,9 @@ import dev.alejandro.paymentservice.entity.PaymentEntity;
 import dev.alejandro.paymentservice.repository.PaymentRepository;
 import dev.alejandro.paymentservice.service.PaymentService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.LoggerFactoryFriend;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +22,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
 
+    private static final Logger log = LoggerFactory.getLogger(PaymentServiceImpl.class);
     @Override
     public PaymentResponseDTO createPayment(PaymentRequestDTO paymentDTO) throws IllegalArgumentException {
         if(Objects.isNull(paymentDTO)) throw new IllegalArgumentException("Invalid payment request");
@@ -32,26 +36,30 @@ public class PaymentServiceImpl implements PaymentService {
                 .amount(paymentDTO.amount())
                 .build();
         PaymentEntity p = paymentRepository.save(payment);
-        return new PaymentResponseDTO(
+        PaymentResponseDTO paymentResponseDTO = new PaymentResponseDTO(
                 p.getId(),
                 p.getStatus(),
                 p.getTranstactionId(),
                 p.getOrderId(),
                 p.getAmount()
         );
+        log.info("Payment response data: {}",paymentResponseDTO);
+        return paymentResponseDTO;
     }
 
     @Override
     public List<PaymentResponseDTO> getPayments() throws IllegalArgumentException {
         List<PaymentEntity> payments = paymentRepository.findAll();
         if(payments.isEmpty()) throw new IllegalArgumentException("No payments found");
-        return payments.stream().map(p -> new PaymentResponseDTO(
+        List<PaymentResponseDTO> paymentResponseDTOS = payments.stream().map(p -> new PaymentResponseDTO(
                 p.getId(),
                 p.getStatus(),
                 p.getTranstactionId(),
                 p.getOrderId(),
                 p.getAmount()
         )).toList();
+        log.info("Payments : {}",paymentResponseDTOS);
+        return paymentResponseDTOS;
     }
 
     public String paymentProccesing(){
