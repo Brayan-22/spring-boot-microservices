@@ -1,4 +1,15 @@
 services:
+  zipkin-server:
+    image: openzipkin/zipkin
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:9411/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    ports:
+      - "9411:9411"
   redis-service:
     image: redis:latest
     container_name: redis-service
@@ -6,20 +17,7 @@ services:
       - "6379"
     networks:
       - microservices-network
-  zipkin-server:
-    image: openzipkin/zipkin
-    environment:
-      - eureka.client.serviceUrl.defaultZone=http://eureka-server:8761/eureka/
-      - eureka.instance.hostname=zipkin-service
-      - eureka.instance.preferIpAddress=true
-      - JAVA_OPTS=-Dspring.profiles.active=eureka
-    networks:
-      - microservices-network
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://zipkin-server:9411/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+
   reverse-proxy:
     image: nginx:latest
     container_name: reverse-proxy
@@ -39,8 +37,8 @@ services:
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    expose:
-      - "9200"
+    ports:
+      - "9200:9200"
     volumes:
       - esdata:/usr/share/elasticsearch/data
     networks:
@@ -49,8 +47,8 @@ services:
   logstash:
     image: docker.elastic.co/logstash/logstash:7.10.0
     container_name: logstash
-    expose:
-      - "5044"
+    ports:
+      - "5044:5044"
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline
     networks:
@@ -62,8 +60,12 @@ services:
   kibana:
     image: docker.elastic.co/kibana/kibana:7.10.0
     container_name: kibana
-    expose:
-      - "5601"
+    ports:
+      - "5601:5601"
+    environment:
+      - SERVER_BASEPATH=/kibana
+      - SERVER_REWRITEBASEPATH=true
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     networks:
       - microservices-network
     depends_on:
@@ -76,12 +78,12 @@ services:
     build:
       context: ./service-registry
       dockerfile: Dockerfile
-    expose:
-      - "8761"
+    ports:
+      - "8761:8761"
     networks:
       - microservices-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://eureka-server:8761/actuator/health"]
+      test: ["CMD", "wget", "--spider", "http://localhost:8761/actuator/health"]
       interval: 50s
       timeout: 10s
       retries: 5
@@ -99,7 +101,7 @@ services:
       eureka-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://config-server:9196/actuator/health"]
+      test: ["CMD", "wget", "--spider", "http://localhost:9196/actuator/health"]
       interval: 60s
       timeout: 20s
       retries: 10
@@ -172,7 +174,7 @@ services:
     networks:
       - microservices-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://gateway-service:8080/actuator/health"]
+      test: ["CMD", "wget", "--spider", "http://localhost:8080/actuator/health"]
       interval: 60s
       timeout: 20s
       retries: 10

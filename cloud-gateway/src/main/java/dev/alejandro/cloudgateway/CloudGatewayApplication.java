@@ -14,17 +14,10 @@ import org.springframework.context.annotation.Bean;
 @EnableDiscoveryClient
 public class CloudGatewayApplication {
 
-    private static final Logger log = LoggerFactory.getLogger(CloudGatewayApplication.class);
 
     public static void main(String[] args) {
         SpringApplication.run(CloudGatewayApplication.class, args);
     }
 
-    @Bean
-    CommandLineRunner runner(@Value("${spring.zipkin.base-url}") String zipkinUrl) {
-        return args -> {
-            log.info("Zipkin URL:{} ",zipkinUrl);
-        };
-    }
 
 }
