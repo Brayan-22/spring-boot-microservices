@@ -1,5 +1,4 @@
-
-FROM maven:3-amazoncorretto-21-al2023 AS build
+FROM maven:3-amazoncorretto-21-alpine AS build
 
 WORKDIR /app
 
@@ -8,12 +7,11 @@ COPY src ./src
 
 RUN mvn clean package -DskipTests -Pprod
 
-FROM amazoncorretto:21-al2023-headless
+FROM amazoncorretto:21-alpine3.18
 
 WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
 
-EXPOSE 9091
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

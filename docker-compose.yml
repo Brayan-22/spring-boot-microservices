@@ -1,18 +1,25 @@
 services:
-  zipkin-service:
-    image: openzipkin/zipkin:latest
-    container_name: zipkin-service
-    ports:
-      - "9411:9411"
-    networks:
-        - microservices-network
   redis-service:
     image: redis:latest
     container_name: redis-service
-    ports:
+    expose:
       - "6379"
     networks:
       - microservices-network
+  zipkin-server:
+    image: openzipkin/zipkin
+    environment:
+      - eureka.client.serviceUrl.defaultZone=http://eureka-server:8761/eureka/
+      - eureka.instance.hostname=zipkin-service
+      - eureka.instance.preferIpAddress=true
+      - JAVA_OPTS=-Dspring.profiles.active=eureka
+    networks:
+      - microservices-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://zipkin-server:9411/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
   reverse-proxy:
     image: nginx:latest
     container_name: reverse-proxy
@@ -32,8 +39,8 @@ services:
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ports:
-      - "9200:9200"
+    expose:
+      - "9200"
     volumes:
       - esdata:/usr/share/elasticsearch/data
     networks:
@@ -42,8 +49,8 @@ services:
   logstash:
     image: docker.elastic.co/logstash/logstash:7.10.0
     container_name: logstash
-    ports:
-      - "5044:5044"
+    expose:
+      - "5044"
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline
     networks:
@@ -55,8 +62,8 @@ services:
   kibana:
     image: docker.elastic.co/kibana/kibana:7.10.0
     container_name: kibana
-    ports:
-      - "5601:5601"
+    expose:
+      - "5601"
     networks:
       - microservices-network
     depends_on:
@@ -69,8 +76,8 @@ services:
     build:
       context: ./service-registry
       dockerfile: Dockerfile
-    ports:
-      - "8761:8761"
+    expose:
+      - "8761"
     networks:
       - microservices-network
     healthcheck:
@@ -84,7 +91,7 @@ services:
     build:
       context: ./cloud-config-server
       dockerfile: Dockerfile
-    ports:
+    expose:
       - "9196"
     networks:
         - microservices-network
@@ -102,17 +109,18 @@ services:
     build:
       context: ./order-service
       dockerfile: Dockerfile
-    ports:
+    expose:
       - "9092"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
       - ORDER_SERVICE_PORT=9092
       - CONFIG_SERVER_URI=http://config-server:9196
-      - ZIPKIN_SERVER_URI=http://zipkin-service:9411
+      - ZIPKIN_HOST=zipkin-server
+      - ZIPKIN_PORT=9411
     networks:
       - microservices-network
     depends_on:
-      zipkin-service:
+      zipkin-server:
         condition: service_started
       config-server:
         condition: service_healthy
@@ -126,17 +134,18 @@ services:
     build:
       context: ./payment-service
       dockerfile: Dockerfile
-    ports:
+    expose:
       - "9091"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
       - PAYMENT_SERVICE_PORT=9091
       - CONFIG_SERVER_URI=http://config-server:9196
-      - ZIPKIN_SERVER_URI=http://zipkin-service:9411
+      - ZIPKIN_HOST=zipkin-server
+      - ZIPKIN_PORT=9411
     networks:
       - microservices-network
     depends_on:
-      zipkin-service:
+      zipkin-server:
         condition: service_started
       config-server:
         condition: service_healthy
@@ -150,14 +159,15 @@ services:
     build:
       context: ./cloud-gateway
       dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     environment:
       - REDIS_HOST=redis-service
       - REDIS_PORT=6379
       - CONFIG_SERVER_URI=http://config-server:9196
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
-      - ZIPKIN_SERVER_URI=http://zipkin-service:9411
+      - ZIPKIN_HOST=zipkin-server
+      - ZIPKIN_PORT=9411
       - GATEWAY_PORT=8080
     networks:
       - microservices-network
@@ -167,7 +177,7 @@ services:
       timeout: 20s
       retries: 10
     depends_on:
-      zipkin-service:
+      zipkin-server:
         condition: service_started
       eureka-server:
         condition: service_healthy

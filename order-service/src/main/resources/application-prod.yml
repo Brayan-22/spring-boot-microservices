@@ -18,8 +18,6 @@ spring:
     url: jdbc:h2:mem:order-service
   config:
     import: configserver:${CONFIG_SERVER_URI}
-  zipkin:
-    base-url: ${ZIPKIN_SERVER_URI}
 server:
   port: ${ORDER_SERVICE_PORT}
 management:
@@ -28,6 +26,11 @@ management:
       exposure:
         include:
           - "*"
+  zipkin:
+    tracing:
+      endpoint: http://${ZIPKIN_HOST}:${ZIPKIN_PORT}/api/v2/spans
+      connect-timeout: 5s
+      read-timeout: 5s
     endpoint:
       health:
         show-details: always

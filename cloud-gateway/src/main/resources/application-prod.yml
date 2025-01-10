@@ -51,16 +51,22 @@ spring:
       port: 6379
   config:
     import: configserver:${CONFIG_SERVER_URI}
-  zipkin:
-    base-url: ${ZIPKIN_SERVER_URI}
 server:
   port: ${GATEWAY_PORT}
 management:
+  tracing:
+    sampling:
+      probability: 1.0
   endpoints:
     web:
       exposure:
         include:
           - "*"
+  zipkin:
+    tracing:
+      endpoint: http://${ZIPKIN_HOST}:${ZIPKIN_PORT}/api/v2/spans
+      connect-timeout: 5s
+      read-timeout: 5s
     endpoint:
       health:
         show-details: always

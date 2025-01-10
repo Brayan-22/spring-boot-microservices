@@ -18,8 +18,6 @@ spring:
     url: jdbc:h2:mem:payment-service
   config:
     import: configserver:http://config-server:9196
-  zipkin:
-    base-url: ${ZIPKIN_SERVER_URI}
 server:
   port: ${PAYMENT_SERVICE_PORT}
 management:
@@ -32,6 +30,12 @@ management:
     enabled: true
     sampling:
       probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://${ZIPKIN_HOST}:${ZIPKIN_PORT}/api/v2/spans
+      connect-timeout: 5s
+      read-timeout: 5s
+
 eureka:
   instance:
     hostname: payment-service
