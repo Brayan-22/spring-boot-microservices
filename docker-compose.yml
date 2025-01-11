@@ -28,7 +28,7 @@ services:
     networks:
       - microservices-network
     environment:
-      - DOMAIN_NAME=${DOMAIN_NAME}
+      - SERVER_NAME=${SERVER_NAME}
     depends_on:
       gateway-service:
         condition: service_healthy
