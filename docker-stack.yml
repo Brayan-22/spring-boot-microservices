@@ -3,6 +3,10 @@ services:
     image: openzipkin/zipkin
     networks:
       - microservices-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:9411/health"]
       interval: 30s
@@ -10,17 +14,20 @@ services:
       retries: 5
     ports:
       - "9411:9411"
+
   redis-service:
     image: redis:latest
-    container_name: redis-service
-    expose:
-      - "6379"
     networks:
       - microservices-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    expose:
+      - "6379"
 
   reverse-proxy:
     image: nginx:latest
-    container_name: reverse-proxy
     ports:
       - "80:80"
     volumes:
@@ -29,13 +36,13 @@ services:
       - microservices-network
     environment:
       - SERVER_NAME=${SERVER_NAME}
-    depends_on:
-      gateway-service:
-        condition: service_healthy
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
-    container_name: elasticsearch
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
@@ -45,23 +52,26 @@ services:
       - esdata:/usr/share/elasticsearch/data
     networks:
       - microservices-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
   logstash:
     image: docker.elastic.co/logstash/logstash:7.10.0
-    container_name: logstash
     ports:
       - "5044:5044"
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline
     networks:
       - microservices-network
-    depends_on:
-      elasticsearch:
-        condition: service_started
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
   kibana:
     image: docker.elastic.co/kibana/kibana:7.10.0
-    container_name: kibana
     ports:
       - "5601:5601"
     environment:
@@ -70,49 +80,37 @@ services:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     networks:
       - microservices-network
-    depends_on:
-      elasticsearch:
-        condition: service_started
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
   eureka-server:
-    image: eureka-server:latest
-    container_name: eureka-server
-    build:
-      context: ./service-registry
-      dockerfile: Dockerfile
+    image: eureka-server:v1
     ports:
       - "8761:8761"
     networks:
       - microservices-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:8761/actuator/health"]
-      interval: 50s
-      timeout: 10s
-      retries: 5
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
   config-server:
-    image: config-server:latest
-    container_name: config-server
-    build:
-      context: ./cloud-config-server
-      dockerfile: Dockerfile
+    image: config-server:v1
+    networks:
+      - microservices-network
     expose:
       - "9196"
-    networks:
-        - microservices-network
-    depends_on:
-      eureka-server:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:9196/actuator/health"]
-      interval: 60s
-      timeout: 20s
-      retries: 10
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
   order-service:
-    image: order-service:latest
-    container_name: order-service
-    build:
-      context: ./order-service
-      dockerfile: Dockerfile
+    image: order-service:v1
+    networks:
+      - microservices-network
     expose:
       - "9092"
     environment:
@@ -121,23 +119,13 @@ services:
       - CONFIG_SERVER_URI=http://config-server:9196
       - ZIPKIN_HOST=zipkin-server
       - ZIPKIN_PORT=9411
-    networks:
-      - microservices-network
-    depends_on:
-      zipkin-server:
-        condition: service_started
-      config-server:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-      logstash:
-        condition: service_started
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
   payment-service:
-    image: payment-service:latest
-    container_name: payment-service
-    build:
-      context: ./payment-service
-      dockerfile: Dockerfile
+    image: payment-service:v1
     expose:
       - "9091"
     environment:
@@ -148,21 +136,13 @@ services:
       - ZIPKIN_PORT=9411
     networks:
       - microservices-network
-    depends_on:
-      zipkin-server:
-        condition: service_started
-      config-server:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-      logstash:
-        condition: service_started
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
   gateway-service:
-    image: gateway-service:latest
-    container_name: gateway-service
-    build:
-      context: ./cloud-gateway
-      dockerfile: Dockerfile
+    image: gateway-service:v1
     expose:
       - "8080"
     environment:
@@ -175,27 +155,15 @@ services:
       - GATEWAY_PORT=8080
     networks:
       - microservices-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:8080/actuator/health"]
-      interval: 60s
-      timeout: 20s
-      retries: 10
-    depends_on:
-      zipkin-server:
-        condition: service_started
-      eureka-server:
-        condition: service_healthy
-      config-server:
-        condition: service_healthy
-      redis-service:
-        condition: service_started
-      order-service:
-        condition: service_started
-      payment-service:
-        condition: service_started
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
 volumes:
   esdata:
     driver: local
+
 networks:
   microservices-network:
-    driver: bridge
+    driver: overlay

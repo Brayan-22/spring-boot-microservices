@@ -35,7 +35,9 @@ management:
       endpoint: http://${ZIPKIN_HOST}:${ZIPKIN_PORT}/api/v2/spans
       connect-timeout: 5s
       read-timeout: 5s
-
 eureka:
   instance:
     hostname: payment-service
+springdoc:
+  api-docs:
+    path: /v1/api-docs

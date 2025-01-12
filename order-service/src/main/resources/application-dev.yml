@@ -40,3 +40,6 @@ management:
     sampling:
       probability: 1.0
     enabled: true
+springdoc:
+  api-docs:
+    path: /v1/api-docs

@@ -41,3 +41,6 @@ management:
 eureka:
   instance:
     hostname: order-service
+springdoc:
+  api-docs:
+    path: /v1/api-docs
